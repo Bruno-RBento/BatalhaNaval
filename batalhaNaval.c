@@ -12,6 +12,11 @@
 #define N 8
 #define M 8
 
+#define PORTA_AVIOES 1
+#define NAVIO_TANQUE 1
+#define CONTRAPEDEIRO 1
+#define SUBMARINO 1
+
 /**Representa uma coordenada*/
 typedef struct
 {
@@ -90,7 +95,7 @@ void init_board(int n, int m, Board *b)
  *       mostra os barcos; se for diferente de 0 (zero) mostra.
  */
 
-void print_board(int n, int m, char board[n][m], int flag)
+void print_board(int n, int m, char board[N][M], int flag)
 {
     printf("+");
     for (int j = 0; j < n; j++)
@@ -239,7 +244,7 @@ void init_boat(Boat *b, char type, Position xy, char dir)
  *
  **/
 
-int check_free(int n, int m, Boat *boat, char board[n][m])
+int check_free(int n, int m, Boat *boat, char board[N][M])
 {
     // Implementar
     // retirar as corenadas do boat
@@ -257,6 +262,8 @@ int check_free(int n, int m, Boat *boat, char board[n][m])
         printf("posicao do barco y--> %d", y);
 
         // verificar se tem outro barco designado no mesmo local
+
+
         if (board[x][y] != ' ')
         {
             // printf("\n x --> %d \n y--> %d", x, y);
@@ -293,8 +300,9 @@ int place_boat(int x1, int y1, int dir, char type, Board *board)
     // char board[N][M] = board->board;
 
     // verifica se a direcao esta correta
-    if (dir != 'H' || dir != 'V')
+     if(dir != 'H' && dir != 'V')
     {
+        printf("direction_____%c______\n", dir);
         return -3;
     }
     // verifica se as cordenadas estao correctas
@@ -315,6 +323,17 @@ int place_boat(int x1, int y1, int dir, char type, Board *board)
         return -1;
     }
 
+//colocar na board
+    for (int i = 0; i < b.tSize; i++)
+    {
+        int x = b.coord[i].pos.x;
+        int y = b.coord[i].pos.y;
+
+        board->board[x][y] = type;
+    }
+    printf("--------------------------");
+    print_board(N, M, board->board, 1);
+    printf("--------------------------");
     board->boats[nBoats] = b;
     board->numBoats++; // testar se isto funciona
     return 0;
@@ -344,7 +363,6 @@ char check_sink(int x, int y, Board *board)
     }
     for (int i = 0; i < B; i++)
     {
-        // add o barco[i].
         for (int j = 0; j < board->boats[i].tSize; j++)
         {
 
@@ -398,60 +416,55 @@ char check_sink(int x, int y, Board *board)
 int target(int x, int y, Board *board)
 {
 
-    if (board->board[x][y] != ' ')
-    {
-        // cordenada ja atacada antes
-        return 0;
-    }
-
     if (!(x >= 0 && x <= N && y >= 0 && y <= M))
     {
         return -2; // Introduzidas coordenadas inválidas
     }
 
-    for (int i = 0; i < B; i++)
+    if (board->board[x][y] == '*' || board-> board[x][y] == 'F')
     {
-        for (int j = 0; j < board->boats[i].tSize; j++)
+        // cordenada ja atacada antes
+        return 0;
+    }else if(board->board[x][y] == ' '){
+        //add
+        board->board[x][y] = 'F';
+        return -1;
+    }else{
+        char check = check_sink(x, y, board);
+    
+    switch (check)
+    {
+    case 'I' :
+        //cordenadas invalidas
+        return -2;
+        break;
+    case 'F':
+            board->board[x][y] = '*';
+            break;
+    default:
+        for (int i = 0; i < B; i++)
         {
-
-            int x_status = board->boats[i].coord[j].pos.x;
-            int y_status = board->boats[i].coord[j].pos.y;
-
-            if (x_status == x && y_status == y)
-            {
-
-                char checkSink = check_sink(x, y, board);
-                switch (checkSink)
+            for (int j = 0; j < board->boats[i].tSize; j++)
                 {
-                case 'I':
-                    return -2;
-                    // cordenadas esta invalida
+                    int x_status = board->boats[i].coord[j].pos.x;
+                    int y_status = board->boats[i].coord[j].pos.y;
+                
+                    if(x_status == x && y_status == y){
+                        for (int z = 0; z < board->boats[i].tSize; z++)
+                        {
+                            int x = board->boats[i].coord[z].pos.x;
+                            int y = board->boats[i].coord[z].pos.y;
 
-                    break;
-                case 'F':
-                    // put * on the board[][]
-                    board->board[x][y] = '*';
-                    return 1;
-                default:
-                    // hit e afundo o barco
-                    // alterar todas as letras no board[][] do barco para type
-                    // int size =board->boats[i].tSize;
-                    for (int z = 0; z < (board->boats[i].tSize); z++)
-                    {
-                        int x = board->boats[i].coord[z].pos.x;
-                        int y = board->boats[i].coord[z].pos.y;
-
-                        board->board[x][y] = board->boats[i].type;
+                            board->board[x][y] = 'A';
+                        }
+                        return typeToSize(check);
                     }
-
-                    return typeToSize(checkSink);
                 }
+                break;
             }
         }
     }
-
-    board->board[x][y] = 'F';
-    return -1;
+    return -10;
 }
 
 typedef struct
@@ -462,144 +475,230 @@ typedef struct
     int pointsPlayer2;
 } Players;
 
-enum boatsNames
-{
-    PORTA_AVIOES = 'P',
-    NAVIO_TANQUE = 'N',
-    CONTRAPEDEIRO = 'C',
-    SUBMARINO = 'S'
-};
 
 int main(void)
 {
-    /*
-        Board brd;
-        init_board(N, M, &brd);
-        print_board(N, M, brd.board, 1);
-
-        Boat b;
-
-        Position p = {3, 3};
-        brd.board[3][3] = 'N';
-        init_boat(&b, 'C', p, 'H');
-        check_free(N, M, &b, brd.board);
-    */
-    /**Exemplo de uso da print_board e da place_boat**/
-    /**Precisa de as implementar primeiro**/
-    // print_board(N, M, brd.board, 0);
-    // place_boat(1,3, 'H', 'P', &brd);
-
+/*
     Board brd;
     init_board(N, M, &brd);
     print_board(N, M, brd.board, 1);
 
-    Players players;
-    // names
-    printf("Introduza nomes player 1\n");
-    scanf("%s", players.namePlayer1);
+    Boat b;
 
-    printf("Introduza nomes player 2\n");
-    scanf("%s", players.namePlayer2);
+    Position p = {3, 3};
+    brd.board[3][3] = 'N';
+    init_boat(&b, 'C', p, 'H');
+    check_free(N, M, &b, brd.board);
+*/
+/**Exemplo de uso da print_board e da place_boat**/
+/**Precisa de as implementar primeiro**/
+// print_board(N, M, brd.board, 0);
+// place_boat(1,3, 'H', 'P', &brd);
 
-    players.pointsPlayer1 = 0;
-    players.pointsPlayer2 = 0;
-    printf("%s", players.namePlayer1);
+Board brd;
+init_board(N, M, &brd);
+print_board(N, M, brd.board, 1);
 
-    int flagEnd = 1;
-    int flagFun = 1;
-    int xCord = -1;
-    int yCord = -1;
-    char direction;
-    // char typeOfBoat;
+Players players;
+// names
+printf("Introduza nomes player 1\n");
+scanf("%s", players.namePlayer1);
+
+printf("Introduza nomes player 2\n");
+scanf("%s", players.namePlayer2);
+
+players.pointsPlayer1 = 0;
+players.pointsPlayer2 = 0;
+printf("%s", players.namePlayer1);
+
+int flagEnd = 1;
+int flagFun = 1;
+int xCord = -1;
+int yCord = -1;
+char direction;
+char typeOfBoat;
+
+int porta_Avioes = PORTA_AVIOES;
+int navio_tanque = NAVIO_TANQUE;
+int contrapedeiro = CONTRAPEDEIRO;
+int sumbarino = SUBMARINO;
+
+int *boatNow;
+
+// char typeOfBoat;
+
+
 
     while (flagEnd)
     {
+            print_board(N, M, brd.board, 1);
 
-        // start game
-        printf("player place boat\n");
+            while (flagFun){
+                printf("Coloque a letra para o tipo de barco que quer colocar?\n");
+                printf("P -->  Porta-Avioes --> %d\nN --> Navio-Tanque--> %d\nC --> Contrapedeiro --> %d\nS --> Submarino --> %d\n ", porta_Avioes,navio_tanque,contrapedeiro,sumbarino);
+                getchar();
+                scanf("%c", &typeOfBoat);
+                switch (typeOfBoat)
+                {
+                case 'P':
+                    if(porta_Avioes <= 0){
+                        printf("ja nao tens porta avioes para colocar");
+                        continue;
+                    }else{
+                    printf("Vamos colocar o porta Avioes que ocupa 5 lugares no tabuleiro\n");
+                    typeOfBoat = 'P';
+                    porta_Avioes--;
+                    flagFun = 0;
+                    boatNow = &porta_Avioes;
+                    break;
+                    }
+                case 'N':
+                    if (navio_tanque <= 0)
+                    {
+                        printf("ja nao tens navio tanque para colocar");
+                        continue;
+                    }
+                    printf("Vamos colocar o Navio Taque que ocupa 4 lugares no tabuleiro\n");
+                    typeOfBoat = 'N';
+                    navio_tanque--;
+                    flagFun = 0;
+                    boatNow = &navio_tanque;
+                    break;
+                case 'C':
+                    if (contrapedeiro <= 0)
+                    {
+                        printf("ja nao tens contrapedeiro para colocar");
+                        continue;
+                    }
+                    printf("Vamos colocar o Contrapedeiro que ocupa 3 lugares no tabuleiro\n");
+                    typeOfBoat = 'C';
+                    contrapedeiro--;
+                    flagFun = 0;
+                    boatNow = &contrapedeiro;
+                    break;
+                case 'S':
+                    if (sumbarino <= 0)
+                    {
+                        printf("ja nao tens submarinos para colocar");
+                        continue;
+                    }
+                    printf("Vamos colocar o Submarino que ocupa 2 lugares no tabuleiro\n");
+                    typeOfBoat = 'S';
+                    sumbarino--;
+                    flagFun = 0;
+                    boatNow = &sumbarino;
+                    break;
 
-        print_board(N, M, brd.board, 1);
-
-        // cordenada x
-        while (flagFun)
-        {
-            printf("Coloque a coordenada do barco para x?\n");
-            int test = scanf("%d", &xCord);
-
-            if (test != 1)
-            {
-                printf("coloque apenas um valor entre 0 e %d\n", N);
-                continue;
+                default:
+                    printf("Coloque uma letra Correspodente a tabela\n");
+                    continue;
+                }
             }
-            if (xCord >= 0 && xCord <= N)
+
+            flagFun = 1;
+            // cordenada x
+            while (flagFun)
             {
+                printf("Coloque a coordenada do barco para x?\n");
+                int test = scanf("%d", &xCord);
+
+                if (test != 1)
+                {
+                    printf("coloque apenas um valor entre 0 e %d\n", N);
+                    continue;
+                }
+                if (xCord >= 0 && xCord <= N)
+                {
+                    break;
+                }
+                else
+                {
+                    printf("A cordenada introduzida nao esta correta\n");
+                    continue;
+                }
+            }
+            flagFun = 1;
+            // cordenada y
+            while (flagFun)
+            {
+                printf("Coloque a coordenada do barco para y?\n");
+                int test = scanf("%d", &yCord);
+                getchar();
+                if (test != 1)
+                {
+                    printf("coloque apenas um valor entre 0 e %d\n", N);
+                    continue;
+                }
+                if (yCord >= 0 && yCord <= N)
+                {
+                    break;
+                }
+                else
+                {
+                    printf("A cordenada introduzida nao esta correta\n");
+                    continue;
+                }
+            }
+            flagFun = 1;
+            // direction
+            while (flagFun)
+            {
+                printf("Coloque a direcao do barco H para Horizontal e V para Vertical?\n");
+                int test = scanf("%c", &direction);
+
+                if (test != 1)
+                {
+                    printf("o valor colocado nao esta correcto\n");
+                    continue;
+                }
+                if (direction != 'H' && direction != 'V')
+                {
+
+                    continue;
+                }
+                else
+                {
+                    printf("A direcçao introduzida nao esta correta\n");
+                    break;
+                }
+            }
+
+            // tipo de barco
+            // verificar se o local esta vazio if(board[x][y] != ' '){
+
+            // fazer a verificacao se cabe dentro da board
+
+            // printf("Coloque a letra do barco que pretende introduzir?\n");
+            // printf("P --> Porta Avioes\nN --> Navio tanque\nC --> Contrapedeiro\n S --> Sumarino\n");
+
+            int test = place_boat(xCord, yCord, direction, typeOfBoat, &brd);
+            switch (test)
+            {
+            case -3:
+                /* code */
+                break;
+
+            case -2:
+                /* code */
+                break;
+            case -4:
+                /* code */
+                break;
+                case -1:
+                    (*boatNow)++;
+                    printf("------%d---------", *boatNow);
+                    printf("nao foi possivel colocar o barco volte a tentar");
+                    // a posicao ja esta ocupada volte a tentar colocar o barco
+                    break;
+            default:
                 break;
             }
-            else
-            {
-                printf("A cordenada introduzida nao esta correta\n");
-                continue;
-            }
-        }
-
-        // cordenada y
-        while (flagFun)
-        {
-            printf("Coloque a coordenada do barco para y?\n");
-            int test = scanf("%d", &yCord);
-
-            if (test != 1)
-            {
-                printf("coloque apenas um valor entre 0 e %d\n", N);
-                continue;
-            }
-            if (yCord >= 0 && yCord <= N)
-            {
-                break;
-            }
-            else
-            {
-                printf("A cordenada introduzida nao esta correta\n");
-                continue;
-            }
-        }
-        // direction
-        while (flagFun)
-        {
-            printf("Coloque a direcao do barco H para Horizontal e V para Vertical?\n");
-            int test = scanf("%c", &direction);
-
-            if (test != 1)
-            {
-                printf("o valor colocado nao esta correcto\n");
-                continue;
-            }
-            if (direction == 'H' || direction == 'V')
-            {
-                break;
-            }
-            else
-            {
-                printf("A cordenada introduzida nao esta correta\n");
-                continue;
-            }
-        }
-
-        // tipo de barco
-        // verificar se o local esta vazio if(board[x][y] != ' '){
-
-        // fazer a verificacao se cabe dentro da board
-
-        // printf("Coloque a letra do barco que pretende introduzir?\n");
-        // printf("P --> Porta Avioes\nN --> Navio tanque\nC --> Contrapedeiro\n S --> Sumarino\n");
-
-        for (int i = PORTA_AVIOES; i <= SUBMARINO; i++)
-        {
-
-            printf("%c\n", i);
-        }
-
-        // init_boat(&b, 'C', p, 'H');
+            printf("the diretion is  %c\n", direction);
+            printf("the boat was placed __%d__ \n", test);
     }
-    return 0;
+    if (porta_Avioes == 0 && navio_tanque == 0 && contrapedeiro == 0 && sumbarino == 0){
+        printf("todos os barcos estao colocados");
+    }
+
+
 }
