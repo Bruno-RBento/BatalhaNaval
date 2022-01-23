@@ -16,6 +16,7 @@
 #define NAVIO_TANQUE 0
 #define CONTRAPEDEIRO 0
 #define SUBMARINO 1
+#define HITSPERPLAYER 40
 
 /**Representa uma coordenada*/
 typedef struct
@@ -232,6 +233,7 @@ void init_boat(Boat *b, char type, Position xy, char dir)
     // Depositar os valores dados pelo utilizador nas respetivas structs
     b->tSize = size;
     b->type = type;
+    b->afloat = size;
 }
 
 /**
@@ -342,7 +344,8 @@ int place_boat(int x1, int y1, int dir, char type, Board *board)
     print_board(N, M, board->board, 1);
     printf("--------------------------");
     board->boats[nBoats] = b;
-    board->numBoats++; // testar se isto funciona
+    board->numBoats++;
+    board->numBoatsAfloat++;
     return 0;
 }
 
@@ -380,14 +383,21 @@ char check_sink(int x, int y, Board *board)
             {
                 // hit
                 //
+                printf("-_-___---_---_-_-_acertou ver se  afunda ou nao\n");
+                printf("boat -afoat %d\n", board->boats[i].afloat);
+                printf("boat -tSize %d\n", board->boats[i].tSize);
+                printf("boat -type %c\n", board->boats[i].type);
                 if (board->boats[i].afloat > 1)
                 {
+                    printf("-_-_---_---_-_-acertou mas nao afundou boat afund -_-_-_-_-_  %d \n", board->boats[i].afloat);
                     board->boats[i].coord[j].afloat = 0;
-                    board->board[i][j] = '*';
+                    board->boats[i].afloat--;
+                    printf("-_-_---_---_-_-acertou mas nao afundou boat afund -_-_-_-_-_  %d \n", board->boats[i].afloat);
                     return 'F';
                 }
                 else if (board->boats[i].afloat == 1)
                 {
+                    printf("-_-___---_---_-_-_acetou e afundou\n");
                     board->numBoatsAfloat--;
                     board->boats[i].afloat = 0;
                     board->boats[i].coord[j].afloat = 0;
@@ -428,31 +438,38 @@ int target(int x, int y, Board *board)
         return -2; // Introduzidas coordenadas inválidas
     }
 
-    if (board->board[x][y] == '*' || board-> board[x][y] == 'F')
+    if (board->board[x][y] == '*' || board->board[x][y] == 'F' || board->board[x][y] == 'A')
     {
         // cordenada ja atacada antes
         return 0;
-
-    }else if(board->board[x][y] == ' '){
+    }
+    else if (board->board[x][y] == ' ')
+    {
 
         board->board[x][y] = 'F';
         return -1;
-    }else{
-        char check = check_sink(x, y, board);
-    
-    switch (check)
+    }
+    else
     {
-    case 'I' :
-        //cordenadas invalidas
-        return -2;
-        break;
-    case 'F':
+        char check = check_sink(x, y, board);
+
+        switch (check)
+        {
+        case 'I':
+            //cordenadas invalidas
+            return -2;
+            break;
+        case 'F':
             board->board[x][y] = '*';
-            printf("acertou mas nao afundou %c \n",check);
+            //printf("acertou mas nao afundou %c \n",check);
             return 1;
             break;
 
-default:
+        case 'P':
+        case 'N':
+        case 'C':
+        case 'S':
+
             printf("you sink it all");
             for (int i = 0; i < B; i++)
             {
@@ -460,8 +477,9 @@ default:
                 {
                     int x_status = board->boats[i].coord[j].pos.x;
                     int y_status = board->boats[i].coord[j].pos.y;
-                
-                    if(x_status == x && y_status == y){
+
+                    if (x_status == x && y_status == y)
+                    {
                         for (int z = 0; z < board->boats[i].tSize; z++)
                         {
                             int x = board->boats[i].coord[z].pos.x;
@@ -477,6 +495,86 @@ default:
         }
     }
     return -10;
+}
+
+int placexCord(){
+    int xCord = 0;
+    int flagFun = 1;
+    while (flagFun)
+    {
+        printf("Coloque a coordenada do x?\n");
+        int test = scanf("%d", &xCord);
+        getchar();
+
+        if (test != 1)
+        {
+            printf("coloque apenas um valor entre 0 e %d\n", N);
+            continue;
+        }
+        if (xCord >= 0 && xCord <= N)
+        {
+            break;
+        }
+        else
+        {
+            printf("A cordenada introduzida nao esta correta\n");
+            continue;
+        }
+    }
+    return xCord;
+}
+
+int palceyCord(){
+    int yCord = 0;
+    int flagFun = 1;
+    while (flagFun)
+    {
+        printf("Coloque a coordenada do y?\n");
+        int test = scanf("%d", &yCord);
+        getchar();
+        if (test != 1)
+        {
+            printf("coloque apenas um valor entre 0 e %d\n", N);
+            continue;
+        }
+        if (yCord >= 0 && yCord <= N)
+        {
+            break;
+        }
+        else
+        {
+            printf("A cordenada introduzida nao esta correta\n");
+            continue;
+        }
+    }
+    return yCord;
+}
+
+char placeDirection(){
+    char direction;
+    int flagFun = 1;
+    while (flagFun)
+    {
+        printf("Coloque a direcao do barco H para Horizontal e V para Vertical?\n");
+        int test = scanf("%c", &direction);
+
+        if (test != 1)
+        {
+            printf("o valor colocado nao esta correcto\n");
+            continue;
+        }
+        if (direction != 'H' && direction != 'V')
+        {
+
+            continue;
+        }
+        else
+        {
+            printf("A direcçao introduzida nao esta correta\n");
+            break;
+        }
+    }
+    return direction;
 }
 
 typedef struct
@@ -608,82 +706,15 @@ int *boatNow;
                     continue;
                 }
             }
-
             flagFun = 1;
             // cordenada x
-            while (flagFun)
-            {
-                printf("Coloque a coordenada do barco para x?\n");
-                int test = scanf("%d", &xCord);
-
-                if (test != 1)
-                {
-                    printf("coloque apenas um valor entre 0 e %d\n", N);
-                    continue;
-                }
-                if (xCord >= 0 && xCord <= N)
-                {
-                    break;
-                }
-                else
-                {
-                    printf("A cordenada introduzida nao esta correta\n");
-                    continue;
-                }
-            }
+            xCord = placexCord();
             flagFun = 1;
             // cordenada y
-            while (flagFun)
-            {
-                printf("Coloque a coordenada do barco para y?\n");
-                int test = scanf("%d", &yCord);
-                getchar();
-                if (test != 1)
-                {
-                    printf("coloque apenas um valor entre 0 e %d\n", N);
-                    continue;
-                }
-                if (yCord >= 0 && yCord <= N)
-                {
-                    break;
-                }
-                else
-                {
-                    printf("A cordenada introduzida nao esta correta\n");
-                    continue;
-                }
-            }
+            yCord = palceyCord();
             flagFun = 1;
             // direction
-            while (flagFun)
-            {
-                printf("Coloque a direcao do barco H para Horizontal e V para Vertical?\n");
-                int test = scanf("%c", &direction);
-
-                if (test != 1)
-                {
-                    printf("o valor colocado nao esta correcto\n");
-                    continue;
-                }
-                if (direction != 'H' && direction != 'V')
-                {
-
-                    continue;
-                }
-                else
-                {
-                    printf("A direcçao introduzida nao esta correta\n");
-                    break;
-                }
-            }
-
-            // tipo de barco
-            // verificar se o local esta vazio if(board[x][y] != ' '){
-
-            // fazer a verificacao se cabe dentro da board
-
-            // printf("Coloque a letra do barco que pretende introduzir?\n");
-            // printf("P --> Porta Avioes\nN --> Navio tanque\nC --> Contrapedeiro\n S --> Sumarino\n");
+            direction = placeDirection();
 
             int test = place_boat(xCord, yCord, direction, typeOfBoat, &brd);
             switch (test)
@@ -715,70 +746,32 @@ int *boatNow;
                 
                 printf("jogador %s prepare-se para atacar\n", players.namePlayer2);
                 print_board(N, M, brd.board, 0);
-                flagFun = 1;
-                //cordenada do x
-                    while (flagFun)
-                    {
-                        printf("Coloque a coordenada do x?\n");
-                        int test = scanf("%d", &xCord);
 
-                        if (test != 1)
-                        {
-                            printf("coloque apenas um valor entre 0 e %d\n", N);
-                            continue;
-                        }
-                        if (xCord >= 0 && xCord <= N)
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            printf("A cordenada introduzida nao esta correta\n");
-                            continue;
-                        }
-                    }
-                    flagFun = 1;
-                    // cordenada y
-                    while (flagFun)
-                    {
-                        printf("Coloque a coordenada do barco para y?\n");
-                        int test = scanf("%d", &yCord);
-                        getchar();
-                        if (test != 1)
-                        {
-                            printf("coloque apenas um valor entre 0 e %d\n", N);
-                            continue;
-                        }
-                        if (yCord >= 0 && yCord <= N)
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            printf("A cordenada introduzida nao esta correta\n");
-                            continue;
-                        }
-                    }
-                    int impact = target(xCord, yCord, &brd);
+                xCord = placexCord();
+                printf("xcord --> %d", xCord);
+                // cordenada y
+                yCord = palceyCord();
+                printf("y--> cord %d", yCord);
+                int impact = target(xCord, yCord, &brd);
 
-                    switch (impact)
-                    {
-                    case 0:
-                        printf("esta coordenada ja foi atacada antes");
-                        break;
-                    case -1:
-                        printf("nao acertou em nada");
-                        break;
-                    case -2:
-                        printf("as cordenadas estao invalidas");
-                        break;
-                    case 1:
-                        printf("Acertou em um barco mas ainda nao o afundou");
-                        break;
+                switch (impact)
+                {
+                case 0:
+                    printf("esta coordenada ja foi atacada antes");
+                    break;
+                case -1:
+                    printf("nao acertou em nada");
+                    break;
+                case -2:
+                    printf("as cordenadas estao invalidas");
+                    break;
+                case 1:
+                    printf("Acertou em um barco mas ainda nao o afundou");
+                    break;
 
-                    default:
-                        printf("o barco foi afundado parabens continua o bom trabalho\n");
-                        break;
+                default:
+                    printf("o barco foi afundado parabens continua o bom trabalho\n");
+                    break;
                     }
                 }
             }
