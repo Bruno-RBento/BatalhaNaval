@@ -1,8 +1,8 @@
 /**
  * @autores:
- * Nome:                    Número de Aluno:
- * Nome:                    Número de Aluno:
- * Nome:                    Número de Aluno:
+ * Nome: Bruno Bento        Número de Aluno: 47583
+ * Nome: Ricardo Pereira    Número de Aluno: 48554
+ * Nome: João Matos	        Número de Aluno: 47691
  **/
 
 #include <stdio.h>
@@ -16,7 +16,7 @@
 #define NAVIO_TANQUE 0
 #define CONTRAPEDEIRO 0
 #define SUBMARINO 1
-#define HITSPERPLAYER 5
+#define HITSPERPLAYER 40
 
 /**Representa uma coordenada*/
 typedef struct
@@ -207,14 +207,12 @@ int typeToSize(char type)
 void init_boat(Boat *b, char type, Position xy, char dir)
 {
     int size = typeToSize(type);
-    printf("---------->   %d", size);
+    
     if (dir == 'H')
     {
         for (int i = 0; i < size; i++)
         {
             Position pos = {xy.x, xy.y + i};
-            // printf("x--> %d", xy.x);
-            // printf("y--> %d", xy.y+i);
             b->coord[i].afloat = 1;
             b->coord[i].pos = pos;
         }
@@ -224,8 +222,6 @@ void init_boat(Boat *b, char type, Position xy, char dir)
         for (int i = 0; i < size; i++)
         {
             Position pos = {xy.x + i, xy.y};
-            // printf("x--> %d", xy.x + i);
-            // printf("y--> %d", xy.y);
             b->coord[i].afloat = 1;
             b->coord[i].pos = pos;
         }
@@ -255,28 +251,15 @@ void init_boat(Boat *b, char type, Position xy, char dir)
 
 int check_free(int n, int m, Boat *boat, char board[N][M])
 {
-    // Implementar
-    // retirar as corenadas do boat
     int res = -1;
-
     int boatSize = typeToSize(boat->type);
     for (int i = 0; i < boatSize; i++)
     {
-        printf("boatSize %d", boatSize);
+
         int x = boat->coord[i].pos.x;
-        printf("posicao do barco x--> %d", x);
-
         int y = boat->coord[i].pos.y;
-
-        printf("posicao do barco y--> %d", y);
-
-        // verificar se tem outro barco designado no mesmo local
-
-
         if (board[x][y] != ' ')
         {
-            // printf("\n x --> %d \n y--> %d", x, y);
-            // printf("wrong");
             res = 0;
         }
     }
@@ -309,9 +292,8 @@ int place_boat(int x1, int y1, int dir, char type, Board *board)
     // char board[N][M] = board->board;
 
     // verifica se a direcao esta correta
-     if(dir != 'H' && dir != 'V')
+    if(dir != 'H' && dir != 'V')
     {
-        printf("direction_____%c______\n", dir);
         return -3;
     }
     // verifica se as cordenadas estao correctas
@@ -340,9 +322,7 @@ int place_boat(int x1, int y1, int dir, char type, Board *board)
 
         board->board[x][y] = type;
     }
-    printf("--------------------------");
     print_board(N, M, board->board, 1);
-    printf("--------------------------");
     board->boats[nBoats] = b;
     board->numBoats++;
     board->numBoatsAfloat++;
@@ -367,9 +347,10 @@ int place_boat(int x1, int y1, int dir, char type, Board *board)
 char check_sink(int x, int y, Board *board)
 {
     // verifica se a cordenada e valida
-    if (!(x >= 0 && y >= 0 && x < N && y < M))
-    {
-        return 'I';
+    if (!(x >= 0 && y >= 0 && x <= N && y <= M))
+
+        {
+            return 'I';
     }
     for (int i = 0; i < B; i++)
     {
@@ -381,23 +362,17 @@ char check_sink(int x, int y, Board *board)
 
             if (xb == x && yb == y)
             {
-                // hit
-                //
-                printf("-_-___---_---_-_-_acertou ver se  afunda ou nao\n");
                 printf("boat -afoat %d\n", board->boats[i].afloat);
                 printf("boat -tSize %d\n", board->boats[i].tSize);
                 printf("boat -type %c\n", board->boats[i].type);
                 if (board->boats[i].afloat > 1)
                 {
-                    printf("-_-_---_---_-_-acertou mas nao afundou boat afund -_-_-_-_-_  %d \n", board->boats[i].afloat);
                     board->boats[i].coord[j].afloat = 0;
                     board->boats[i].afloat--;
-                    printf("-_-_---_---_-_-acertou mas nao afundou boat afund -_-_-_-_-_  %d \n", board->boats[i].afloat);
                     return 'F';
                 }
                 else if (board->boats[i].afloat == 1)
                 {
-                    printf("-_-___---_---_-_-_acetou e afundou\n");
                     board->numBoatsAfloat--;
                     board->boats[i].afloat = 0;
                     board->boats[i].coord[j].afloat = 0;
@@ -433,7 +408,7 @@ char check_sink(int x, int y, Board *board)
 int target(int x, int y, Board *board)
 {
 
-    if (!(x >= 0 && x <= N && y >= 0 && y <= M))
+    if (!(x >= 0 && x < N && y >= 0 && y < M))
     {
         return -2; // Introduzidas coordenadas inválidas
     }
@@ -469,8 +444,6 @@ int target(int x, int y, Board *board)
         case 'N':
         case 'C':
         case 'S':
-
-            printf("you sink it all");
             for (int i = 0; i < B; i++)
             {
                 for (int j = 0; j < board->boats[i].tSize; j++)
@@ -494,7 +467,7 @@ int target(int x, int y, Board *board)
             }
         }
     }
-    return -10;
+    return -1;
 }
 
 int placexCord(){
@@ -511,7 +484,7 @@ int placexCord(){
             printf("coloque apenas um valor entre 0 e %d\n", N);
             continue;
         }
-        if (xCord >= 0 && xCord <= N)
+        if (xCord >= 0 && xCord < N)
         {
             break;
         }
@@ -537,7 +510,7 @@ int palceyCord(){
             printf("coloque apenas um valor entre 0 e %d\n", N);
             continue;
         }
-        if (yCord >= 0 && yCord <= N)
+        if (yCord >= 0 && yCord < M)
         {
             break;
         }
@@ -586,27 +559,8 @@ typedef struct
 } Players;
 
 
-
-
-
 int main(void)
 {
-/*
-    Board brd;
-    init_board(N, M, &brd);
-    print_board(N, M, brd.board, 1);
-
-    Boat b;
-
-    Position p = {3, 3};
-    brd.board[3][3] = 'N';
-    init_boat(&b, 'C', p, 'H');
-    check_free(N, M, &b, brd.board);
-*/
-/**Exemplo de uso da print_board e da place_boat**/
-/**Precisa de as implementar primeiro**/
-// print_board(N, M, brd.board, 0);
-// place_boat(1,3, 'H', 'P', &brd);
 
 Board brd;
 init_board(N, M, &brd);
@@ -662,6 +616,7 @@ playerNow = &players.pointsPlayer1;
                 printf("Coloque a letra para o tipo de barco que quer colocar?\n");
                 printf("P -->  Porta-Avioes --> tem %d\nN --> Navio-Tanque--> tem %d\nC --> Contrapedeiro --> tem %d\nS --> Submarino --> tem %d\n ", porta_Avioes,navio_tanque,contrapedeiro,sumbarino);
                 scanf("%c", &typeOfBoat);
+
                 switch (typeOfBoat)
                 {
                 case 'P':
@@ -771,7 +726,7 @@ playerNow = &players.pointsPlayer1;
                     if (brd.numBoatsAfloat == 0)
                     {
                         (*playerNow)++;
-                        printf("the game is over");
+                        printf("Afundo todos os barcos");
                         flagTarget = 0;
                         
                     }
