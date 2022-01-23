@@ -16,7 +16,7 @@
 #define NAVIO_TANQUE 0
 #define CONTRAPEDEIRO 0
 #define SUBMARINO 1
-#define HITSPERPLAYER 40
+#define HITSPERPLAYER 5
 
 /**Representa uma coordenada*/
 typedef struct
@@ -461,7 +461,7 @@ int target(int x, int y, Board *board)
             break;
         case 'F':
             board->board[x][y] = '*';
-            //printf("acertou mas nao afundou %c \n",check);
+
             return 1;
             break;
 
@@ -611,6 +611,7 @@ int main(void)
 Board brd;
 init_board(N, M, &brd);
 print_board(N, M, brd.board, 1);
+int counterShots = 0;
 
 Players players;
 // names
@@ -631,24 +632,35 @@ int xCord = -1;
 int yCord = -1;
 char direction;
 char typeOfBoat;
-
-int porta_Avioes = PORTA_AVIOES;
-int navio_tanque = NAVIO_TANQUE;
-int contrapedeiro = CONTRAPEDEIRO;
-int sumbarino = SUBMARINO;
+int playCount = 0;
 
 int *boatNow;
+int *playerNow;
+
+playerNow = &players.pointsPlayer1;
 
 // char typeOfBoat;
 
     while (flagEnd)
     {
-            print_board(N, M, brd.board, 0);
+        while (players.pointsPlayer1 < 3 || players.pointsPlayer2 < 3)
+        {
+            playCount++;
+            Board brd;
+            init_board(N, M, &brd);
+            print_board(N, M, brd.board, 1);
+            counterShots = 0;
 
+            int porta_Avioes = PORTA_AVIOES;
+            int navio_tanque = NAVIO_TANQUE;
+            int contrapedeiro = CONTRAPEDEIRO;
+            int sumbarino = SUBMARINO;
+
+            //print_board(N, M, brd.board, 0);
+            flagFun = 1;
             while (flagFun){
                 printf("Coloque a letra para o tipo de barco que quer colocar?\n");
-                printf("P -->  Porta-Avioes --> %d\nN --> Navio-Tanque--> %d\nC --> Contrapedeiro --> %d\nS --> Submarino --> %d\n ", porta_Avioes,navio_tanque,contrapedeiro,sumbarino);
-                getchar();
+                printf("P -->  Porta-Avioes --> tem %d\nN --> Navio-Tanque--> tem %d\nC --> Contrapedeiro --> tem %d\nS --> Submarino --> tem %d\n ", porta_Avioes,navio_tanque,contrapedeiro,sumbarino);
                 scanf("%c", &typeOfBoat);
                 switch (typeOfBoat)
                 {
@@ -703,44 +715,27 @@ int *boatNow;
 
                 default:
                     printf("Coloque uma letra Correspodente a tabela\n");
+                    printf("---_____-_-_-_-%c-- -- - -", typeOfBoat);
                     continue;
                 }
             }
-            flagFun = 1;
             // cordenada x
             xCord = placexCord();
-            flagFun = 1;
+
             // cordenada y
             yCord = palceyCord();
-            flagFun = 1;
             // direction
             direction = placeDirection();
 
             int test = place_boat(xCord, yCord, direction, typeOfBoat, &brd);
-            switch (test)
-            {
-            case -3:
-                /* code */
-                break;
-
-            case -2:
-                /* code */
-                break;
-            case -4:
-                /* code */
-                break;
-                case -1:
+            if(test ==-1){
                     (*boatNow)++;
                     printf("nao foi possivel colocar o barco volte a tentar");
-                    // a posicao ja esta ocupada volte a tentar colocar o barco
-                    break;
-            default:
-                break;
-            }
+    }
             if (porta_Avioes == 0 && navio_tanque == 0 && contrapedeiro == 0 && sumbarino == 0)
             {   
                 printf("todos os barcos estao colocados");
-
+                flagTarget = 1;
                 while (flagTarget)
                 {
                 
@@ -748,11 +743,10 @@ int *boatNow;
                 print_board(N, M, brd.board, 0);
 
                 xCord = placexCord();
-                printf("xcord --> %d", xCord);
-                // cordenada y
                 yCord = palceyCord();
-                printf("y--> cord %d", yCord);
+
                 int impact = target(xCord, yCord, &brd);
+                counterShots++;
 
                 switch (impact)
                 {
@@ -773,7 +767,21 @@ int *boatNow;
                     printf("o barco foi afundado parabens continua o bom trabalho\n");
                     break;
                     }
+                    printf("----_--_-_-_-_-_-__--_-barcos aflot %d", brd.numBoatsAfloat);
+                    if (brd.numBoatsAfloat == 0)
+                    {
+                        (*playerNow)++;
+                        printf("the game is over");
+                        flagTarget = 0;
+                        
+                    }
+                    else if (counterShots == HITSPERPLAYER)
+                    {
+                        printf("Usou todos os tiros permitidos");
+                        break;
+                    }
                 }
             }
+        }
     }
 }
