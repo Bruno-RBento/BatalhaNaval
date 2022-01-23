@@ -232,7 +232,6 @@ void init_boat(Boat *b, char type, Position xy, char dir)
     // Depositar os valores dados pelo utilizador nas respetivas structs
     b->tSize = size;
     b->type = type;
-    b->afloat = size;
 }
 
 /**
@@ -308,7 +307,7 @@ int place_boat(int x1, int y1, int dir, char type, Board *board)
     // char board[N][M] = board->board;
 
     // verifica se a direcao esta correta
-    if(dir != 'H' && dir != 'V')
+     if(dir != 'H' && dir != 'V')
     {
         printf("direction_____%c______\n", dir);
         return -3;
@@ -381,21 +380,14 @@ char check_sink(int x, int y, Board *board)
             {
                 // hit
                 //
-                printf("-_-___---_---_-_-_acertou ver se  afunda ou nao\n");
-                printf("boat -afoat %d\n",board->boats[i].afloat);
-                printf("boat -tSize %d\n", board->boats[i].tSize);
-                printf("boat -type %c\n", board->boats[i].type);
                 if (board->boats[i].afloat > 1)
                 {
-                    printf("-_-_---_---_-_-acertou mas nao afundou boat afund -_-_-_-_-_  %d \n", board->boats[i].afloat);
                     board->boats[i].coord[j].afloat = 0;
-                    board->boats[i].afloat--;
-                    printf("-_-_---_---_-_-acertou mas nao afundou boat afund -_-_-_-_-_  %d \n", board->boats[i].afloat);
+                    board->board[i][j] = '*';
                     return 'F';
                 }
                 else if (board->boats[i].afloat == 1)
                 {
-                    printf("-_-___---_---_-_-_acetou e afundou\n");
                     board->numBoatsAfloat--;
                     board->boats[i].afloat = 0;
                     board->boats[i].coord[j].afloat = 0;
@@ -436,7 +428,7 @@ int target(int x, int y, Board *board)
         return -2; // Introduzidas coordenadas inválidas
     }
 
-    if (board->board[x][y] == '*' || board-> board[x][y] == 'F' || board-> board[x][y] == 'A')
+    if (board->board[x][y] == '*' || board-> board[x][y] == 'F')
     {
         // cordenada ja atacada antes
         return 0;
@@ -456,37 +448,32 @@ int target(int x, int y, Board *board)
         break;
     case 'F':
             board->board[x][y] = '*';
-            //printf("acertou mas nao afundou %c \n",check);
+            printf("acertou mas nao afundou %c \n",check);
             return 1;
             break;
 
-    case 'P':
-    case 'N':
-    case 'C':
-    case 'S':
-
-    printf("you sink it all");
-    for (int i = 0; i < B; i++)
-    {
-        for (int j = 0; j < board->boats[i].tSize; j++)
-        {
-            int x_status = board->boats[i].coord[j].pos.x;
-            int y_status = board->boats[i].coord[j].pos.y;
-
-            if (x_status == x && y_status == y)
+default:
+            printf("you sink it all");
+            for (int i = 0; i < B; i++)
             {
-                for (int z = 0; z < board->boats[i].tSize; z++)
+                for (int j = 0; j < board->boats[i].tSize; j++)
                 {
-                    int x = board->boats[i].coord[z].pos.x;
-                    int y = board->boats[i].coord[z].pos.y;
+                    int x_status = board->boats[i].coord[j].pos.x;
+                    int y_status = board->boats[i].coord[j].pos.y;
+                
+                    if(x_status == x && y_status == y){
+                        for (int z = 0; z < board->boats[i].tSize; z++)
+                        {
+                            int x = board->boats[i].coord[z].pos.x;
+                            int y = board->boats[i].coord[z].pos.y;
 
-                    board->board[x][y] = 'A';
+                            board->board[x][y] = 'A';
+                        }
+                        return typeToSize(check);
+                    }
                 }
-                return typeToSize(check);
+                break;
             }
-        }
-        break;
-    }
         }
     }
     return -10;
